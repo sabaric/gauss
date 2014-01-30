@@ -1,0 +1,32 @@
+/*------------------------------------------------------------------------
+                                                                         
+  AUTOCOVR.PRC                                                           
+  Purpose: Computes Autocovaricances and Autocorrelations of a           
+           Univariate Time Series                                        
+  Written by Hyeongwoo Kim (Jan 31, 2003)                                
+  Formula taken from Hamilton (1994, p110) or Hayashi (2000, p142)       
+-------------------------------------------------------------------------
+                                                                         
+  Format: {av,ar}=autocovr(x,p);                                         
+                                                                         
+  Input : x   (nX1) Vector of a Time Series                               
+          p   (1x1) Number of Lags                                       
+                                                                         
+  Output: av  (px1) Vector of Autocovariances from 0 to p-1              
+          ar  (px1) Vector of Autocorrelations from 0 to p-1             
+                                                                         
+-------------------------------------------------------------------------*/
+
+
+proc(2) = autocovr(x,p);
+    local av,ar,i;
+    x = x - meanc(x);
+    av = zeros(p-1,1);
+    i = 1; do until i > (p-1);
+        av[i] = (x'shiftr(x',i,0)')/rows(x);
+        i = i + 1;
+    endo;
+    av = (x'x/(rows(x)))|av;
+    ar = av./(x'x/(rows(x)));
+    retp(av,ar);
+endp;

@@ -1,0 +1,28 @@
+/*---------------------------------------------------------------------------
+                                                                           
+  LAGM.PRC                                                                 
+  Purpose: Generates a VAR System                                          
+  Written by Hyeongwoo Kim (Apr 10, 2008)                                  
+---------------------------------------------------------------------------
+                                                                           
+  Format: Y = lagm(X,p)                                                    
+                                                                           
+  Input : X      (nXk) Matrix                                                
+          p      (1X1) Number of Lagged Variable                           
+                                                                           
+  Output: Y      (n-p)xk*(p+1) Matrix, First k columns are the current     
+                  variables, and the rest k*p columns are the lagged ones. 
+                                                                           
+---------------------------------------------------------------------------*/
+
+
+proc(1) = lagm(x,p);
+    local n,i,y;
+    n = rows(x);
+    y = trimr(x,p,0);
+    i = 1; do until i > p;
+        y = y~trimr(x,p-i,i);             			    
+        i = i+1;
+    endo;
+    retp(y);
+endp;

@@ -1,0 +1,58 @@
+/*--------------------------------------------------------------------------
+                                                                           
+  SETUPGTS.PRC                                                              
+  Purpose: Setup an ADF regression equation with the number of lags
+            chosen by the general-to-specific rule    
+  Written by Hyeongwoo Kim (Feb 29, 2008)                
+                  
+---------------------------------------------------------------------------
+                                                                           
+  Format: {lag,dep,ind,est,seb,rsd} = setupgts(y,pmax,c,sig);                          
+									    
+  Model1: y(t) = b_0*y(t-1)                                 		       
+                   + b_1*dy(t-1) + ... + b_(p)*dy(t-p) + e(t)              
+  Model2: y(t) = b_0 + b_1*y(t-1)                                         
+                   + b_2*dy(t-1) + ... + b_(p+1)*dy(t-p) + e(t)            
+  Model3: y(t) = b_0 + b_1*t + b_2*y(t-1) +                                 
+                   + b_3*dy(t-1) + ... + b_(p+2)*dy(t-p) + e(t)            
+                                                                           
+  Input : y    (TX1) Vector of a Time Series                                
+          pmax (1x1) Maximum number of lags for differenced terms
+          c=0  (1x1) No constant                                            
+           =1        Constant                                              
+           =2        Constant and linear time trend                         
+          sig        Significance level (e.g., 10 for 10%, 5 for 5%) 
+                                                                           
+  Output: lag        Chosen number of lags by the general-to-specific rule                        	    
+          dep        y(t)                                         
+          ind        dependent variables                                 
+          est        estimates              
+          seb        standard errors                         
+          rsd        residuals for bootstrap                                  
+                                                                           
+--------------------------------------------------------------------------*/
+
+
+proc(6) = setupgts(y,pmax,c,sig);
+    local y0,y1,dy,n,j,x,dep,tvb,i,b,rsd,ssq,vcb,seb,tv;
+    y0 = y[2:rows(y)]; y1 = y[1:rows(y)-1]; dy = y0 - y1;
+    n  = rows(dy);
+    j = pmax; do until j < 1;
+        if c eq 1;  x = ones(n-j,1)~y1[j+1:n]; 
+            elseif c eq 2; x = ones(n-j,1)~seqa(1,1,n-j)~y1[j+1:n];
+            else; x = y1[j+1:n];
+        endif;
+        i = 1; do until i > j;
+            x = x~dy[j+1-i:n-i];
+            i = i+1;
+        endo;
+        b = invpd(x'x)*x'y0[j+1:n]; rsd = y0[j+1:n] - x*b;
+        ssq = rsd'rsd/(rows(x)-cols(x)); vcb = ssq*invpd(x'x);
+        seb = sqrt(diag(vcb)); tv = b./seb;         
+        if abs(tv[rows(tv)]) ge cdfni(1-sig/200); goto baby; endif;
+        j = j - 1;
+    endo;
+    baby:
+    if j eq 0; j = 1; endif;
+    retp(j,y0[j+1:n],x,b,seb,rsd);
+endp;

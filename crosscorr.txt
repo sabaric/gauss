@@ -1,0 +1,43 @@
+/*----------------------------------------------------------------------------------------
+                                                                         
+  CROSSCORR.PRC                                                          
+  Purpose: Computes and Graph Cross-Correlations of two time series	  
+  Written by Hyeongwoo Kim (Sep 22, 2004)                                
+-------------------------------------------------------------------------
+                                                                         
+  Format: crosscorr(x,y,lead,lag);                                       
+                                                                         
+  Input : x    (nX1) Vector of a Time Series                              
+          y    (nX1) Vector of a Time Series that has leads and lags      
+          lead (1x1) Number of Leads                                     
+          lag  (1x1) Number of Lags                                      
+                                                                         
+  Output: none. It prints out cross-correlations of x(t) and y(t(+,-)j) and graphs it.						  
+                                                                         
+----------------------------------------------------------------------------------------*/
+
+
+proc(0) = crosscorr(x,y,lead,lag);
+    local ncov,pcov,cov,ccor,i;
+    x = x - meanc(x);
+    y = y - meanc(y);
+    ncov = zeros(lag,1);
+    i = lag; do until i < 1;
+        ncov[lag-i+1] = (x'shiftr(y',i,0)')/rows(x);
+        i = i - 1;
+    endo;
+    ncov = ncov|(x'y/(rows(x)));
+    pcov = zeros(lead,1);
+    i = -1; do until i < -lead;
+        pcov[-i] = (x'shiftr(y',i,0)')/rows(x);
+        i = i - 1;
+    endo;
+    cov = ncov|pcov;
+    ccor = cov./(stdc(x)*stdc(y));
+    ccor;			// Cross-Correlations
+    library pgraph;
+    graphset;
+    _pdate = "";                  
+    title("Cross Correlation");
+    bar(seqa(-lag,1,rows(cov)),ccor);
+endp;

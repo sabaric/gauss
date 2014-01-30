@@ -1,0 +1,54 @@
+/*--------------------------------------------------------------------------
+                                                                           
+  ABIC.PRC                                                                 
+  Purpose: Find the optimal lags by Akaike Information Criteria and 	    
+           Bayesian Information Criteria           			    
+  Written by Hyeongwoo Kim (Mar 13, 2004)                                  
+---------------------------------------------------------------------------
+                                                                           
+  Format: abic(y,pmax);		                                    
+                                                                           
+  Input : y    (nX1) univariate time series                                  
+          pmax (1X1) Maximum number of lag				    
+                                                                           
+  Output: None. It prints out all values				    
+	   First column is AIC values	   	 			    
+          Second column is BIC values					    
+                                                                           
+---------------------------------------------------------------------------*/
+
+
+proc (0) = abic(y,pmax);
+    local lag,obs,non,i,yl,j,yd,rsd,ssq,xtic;
+    lag = zeros(pmax,2);
+    obs = rows(y);
+    non = obs - pmax;
+    i = 1; do until i > pmax;
+        yl = ones(obs-i,i+1);
+        j = 1; do until j>i;
+            yl[.,j+1] = trimr(y,i-j,j);
+            j = j + 1;
+        endo;
+        yd  = trimr(y,i,0); 
+        rsd = yd - yl*inv(yl'yl)*yl'yd;
+        ssq = rsd'rsd;
+        lag[i,1] = ln(ssq/non) + 2*(i+1)/non;		    // AIC
+        lag[i,2] = ln(ssq/non) + ln(non)*(i+1)/non;	    // BIC
+        i = i + 1;
+    endo;
+    lag;
+
+    library pgraph;
+    graphset;
+    _plctrl = { 1, 1 };
+    _pltype = { 1, 2 };
+    _pstype = { 1, 2}; 
+    _plegctl= { 2, 3, 1.7, 4.5 };
+    _plegstr=   "AIC \0"\  
+                "BIC"; 
+    ylabel("Value");
+    xlabel("Number of Lags");
+    title("AIC/BIC");
+    xtic = seqa(1,1,pmax);
+    xy(xtic,lag);
+endp;

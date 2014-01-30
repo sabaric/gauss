@@ -1,0 +1,48 @@
+/*-----------------------------------------------------------------------------------------
+                                                                                           
+  ESTARUT.PRC                                                                              
+  Purpose: UNIT ROOT TEST AGAINST STATIONARY ESTAR (Serially Uncorrelated)                 
+   H0: Driftless Random Walk                                                               
+   H1: Stationary Exponential Smooth Transition Autoregressive                             
+  Written by Hyeongwoo Kim (MAR 3, 2004)                                                   
+-------------------------------------------------------------------------------------------
+                                                                                           
+  Format: tr = estarut(y,c);                                                               
+                                                                                           
+  Input : y    (nX1) Vector of Time Series to be Tested                                       
+          c=0  No Constant                                                                     
+           =1  Include Constant (Use Demeaned Data)                                        
+           =2  Include Constant and Linear Time Trend (Use Demeaned and Detrended Data)    
+                                                                                           
+  Output: tr   (1x1) Nonlinear ADF t-statistic                                             
+                                                                                           
+-------------------------------------------------------------------------------------------*/
+
+
+proc(1) = estarut(y,c);
+    local t,dy,yc,df,b,rsd,ssq,vcb,se,tr;
+"";
+" * H0: Driftless Random Walk";; "   H1: Stationary ESTAR";"";
+" - asymptotic critical values (t-ratio) from Kapetanious et. al (2003) -";
+    "------------------------------------------------------------";
+    "  1%      5%      10%      Model";
+    "------------------------------------------------------------";
+    "-2.82   -2.22   -1.92";;
+    "     Simple NLADF (no constant or trend)";
+    "-3.48   -2.93   -2.66";;
+    "     NLADF with constant (no trend)";
+    "-3.93   -3.40   -3.13";;
+    "     NLADF with constant & trend";
+    "------------------------------------------------------------";"";
+    if c eq 1; t = ones(rows(y),1); y = y - t*inv(t't)*t'y; endif;
+    if c eq 2; t = ones(rows(y),1)~seqa(1,1,rows(y));
+    y = y - t*inv(t't)*t'y; endif; 
+    dy = trimr(y,1,0)-trimr(y,0,1);
+    yc = trimr(y,0,1).^3;          
+    df = rows(dy)-cols(yc);		
+    b = inv(yc'yc)*yc'dy; rsd = dy - yc*b;		
+    ssq = (rsd'rsd)/df;	vcb = ssq*inv(yc'yc);
+    se = sqrt(diag(vcb));
+    tr=b./se;
+    retp(tr);
+endp;

@@ -1,0 +1,85 @@
+/*--------------------------------------------------------------------------
+                                                                          
+  ADFGTS.PRC                                                              
+  Purpose: Test the null of unit root process by ADF                     
+           Number of lags chosen by general to specific rule      	    
+  Written by Hyeongwoo Kim (Nov 1, 2006)                               
+---------------------------------------------------------------------------
+                                                                           
+  Format: {lag,adf,b,seb,tv} = adfgts(y,pmax,c,sig);                       
+  Model : dy(t) = b_0*y(t-1) + b_1 + b_2*t                                 
+                   + b_3*dy(t-1) + ... + b_(p+2)*dy(t-p) + e(t)            
+                                                                           
+  Input : y    (TX1) Vector of a Time Series                                
+          pmax (1x1) Maximum number of lags				    
+          c=0  (1x1) No constant                                            
+           =1        Constant                                              
+           =2        Constant and linear time trend                         
+          sig  (1x1) Significance level (%), e.g., 10 for 10%              
+                                                                           
+  Output: lag        Chosen number of lags                                 
+          adf        ADF statistic                                         
+          b          Coefficient estimates                                 
+          seb        Standard errors       			            
+          tv         T-values                                      
+          It also prints ADF test results                                  
+                                                                           
+---------------------------------------------------------------------------*/
+
+
+proc(5) = adfgts(y,pmax,c,sig);
+    local n1,y_1,dy,n2,p,j,x,tvb,i,b,rsd,ssq,vcb,seb,tv;
+    n1 = rows(y);
+    y_1 = y[1:n1-1];
+    dy  = y[2:n1] - y_1;
+    n2  = rows(dy);
+    tvb = 0;       
+    j = pmax; do until j < 0 or abs(tvb) > cdfni(1-sig/200);
+        if c eq 1;  x = y_1[j+1:n2]~ones(n2-j,1); 
+        elseif c eq 2; x = y_1[j+1:n2]~ones(n2-j,1)~seqa(1,1,n2-j);
+        else; x = y_1[j+1:n2]; endif;
+        i = 1; do until i > j;
+            x = x~dy[j+1-i:n2-i];
+            i = i+1;
+        endo;
+        b = inv(x'x)*x'dy[j+1:n2];
+        rsd = dy[j+1:n2] - x*b;
+        ssq = rsd'rsd/(rows(x)-cols(x));
+        vcb = ssq*inv(x'x);
+        seb = sqrt(diag(vcb));
+        tv  = b./seb;         
+        tvb = tv[rows(tv)];   
+        j = j - 1;
+    endo;
+
+"";
+"-------------------------------------------------------------------";"";
+"One-sided test of H0: Unit root vs. H1: Stationary";
+"Lag selection by general to specific";
+"Approximate asymptotic critical values (t-ratio):";"";
+"------------------------------------------------------------";
+"  1%      5%      10%      Model";
+"------------------------------------------------------------";
+"-2.56   -1.94   -1.62";;
+"     Simple ADF (no constant or trend)";
+"-3.43   -2.86   -2.57";;
+"     ADF with constant (no trend)";
+"-3.96   -3.41   -3.13";;
+"     ADF with constant & trend";
+"------------------------------------------------------------";"";
+
+format/M1/RDN 12,3;
+
+"Chosen number of lags       ";;j+1;
+"ADF Statistic (t-ratio)     ";;tv[1];
+"Rho and its standard error  ";;b[1]~seb[1];"";
+
+"-------------------------------------------------------------------";"";
+
+    retp(j+1,tv[1],b,seb,tv);
+endp;
+
+
+
+
+

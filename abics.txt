@@ -1,0 +1,53 @@
+/*-----------------------------------------------------------------------------------------
+                                                                                           
+  ABICS.PRC                                                                                
+  Purpose: Construct a VAR with the optimal lags by Akaike Information Criteria and 	    
+           Bayesian Information Criteria           			                    
+  Written by Hyeongwoo Kim (Apr 11, 2008)                                                  
+-------------------------------------------------------------------------------------------
+                                                                                           
+  Format: {Y,X,B,p} = abics(Z,pmax,c);		                                            
+                                                           		                    
+  Input : z    (nXk) Matrix (detrended)				                                    
+          pmax (1X1) Maximum number of lag				    		    
+          c    (1X1) 1 if BIC, 2 if AIC is used                                            
+											 
+  Output: Y  (n-p)Xk     Current Variable						    
+	   X  (n-p)X(k*p) p Lagged Variables		   	 			    
+          B  (k*p)Xk     Coefficient Matrix	 					    
+          p  (1X1)       Chosen Number of Lags                                             
+											    
+-------------------------------------------------------------------------------------------*/
+
+
+proc(4) = abics(z,pm,c);
+    local dtm,p,m,n,tm,y,x,b,u,cv,aic,bic,crt,ind,dep,be,lag;
+    dtm = 10000000000000;
+    m = cols(z);
+    n = rows(z);
+    p = 1; do until p > pm;
+        tm = lagm(z,p);
+        y  = tm[.,1:m]; x = tm[.,(m+1):m*(p+1)];
+        b  = invpd(x'x)*x'y; u = y - x*b; cv = u'u/n;
+        if c eq 1; crt = ln(det(cv))+(p*m^2+m)*ln(n)/n; endif;
+        if c eq 2; crt = ln(det(cv))+(p*m^2+m)*2/n; endif;
+        if crt le dtm; dtm = crt; ind = x; dep = y; lag = p; be = b; endif;
+        p = p + 1;
+    endo;
+    retp(dep,ind,be,lag);
+endp;
+
+
+/* Subprocedure */
+
+proc(1) = lagm(x,p);
+    local n,i,y;
+    n = rows(x);
+    y = trimr(x,p,0);
+    i = 1; do until i > p;
+        y = y~trimr(x,p-i,i);             			    
+        i = i + 1;
+    endo;
+    retp(y);
+endp;
+

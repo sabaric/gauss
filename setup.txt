@@ -1,0 +1,42 @@
+/*--------------------------------------------------------------------------
+                                                                           
+  SETUP.PRC                                                              
+  Purpose: Setup an ADF regression equation given number of lags
+  Written by Hyeongwoo Kim (Feb 29, 2008)                
+                  
+---------------------------------------------------------------------------
+                                                                           
+  Format: {dep,ind} = setup(y,j,c);                          
+									    
+  Model1: y(t) = b_0*y(t-1)                                 		       
+                   + b_1*dy(t-1) + ... + b_(p)*dy(t-p) + e(t)              
+  Model2: y(t) = b_0 + b_1*y(t-1)                                         
+                   + b_2*dy(t-1) + ... + b_(p+1)*dy(t-p) + e(t)            
+  Model3: y(t) = b_0 + b_1*t + b_2*y(t-1) +                                 
+                   + b_3*dy(t-1) + ... + b_(p+2)*dy(t-p) + e(t)            
+                                                                           
+  Input : y    (TX1) Vector of a Time Series                                
+          j    (1x1) Number of lags for differenced terms
+          c=0  (1x1) No constant                                            
+           =1        Constant                                              
+           =2        Constant and linear time trend                         
+                                                                           
+  Output: dep        y(t)
+          ind        dependent variables                                 
+                                                                           
+--------------------------------------------------------------------------*/
+
+proc(2) = setup(y,j,c);
+    local y0,y1,dy,n,x,i;
+    y0 = y[2:rows(y)]; y1 = y[1:rows(y)-1]; dy = y0 - y1;
+    n  = rows(dy);
+        if c eq 1;  x = ones(n-j,1)~y1[j+1:n]; 
+            elseif c eq 2; x = ones(n-j,1)~seqa(1,1,n-j)~y1[j+1:n];
+            else; x = y1[j+1:n];
+        endif;
+    i = 1; do until i > j;
+        x = x~dy[j+1-i:n-i];
+        i = i+1;
+    endo;
+    retp(y0[j+1:n],x);
+endp;
