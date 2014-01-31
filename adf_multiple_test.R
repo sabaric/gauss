@@ -1,7 +1,6 @@
 
 rm(list = ls())
 library(MASS)
-library(CADFtest) 
 
 cpi = read.table("cpi.txt") # CPI data
 nex = read.table("for_us.txt") # Nominal exchante rate data
@@ -57,8 +56,8 @@ yout <- list()
     #cat("lag=" ,j+1);  cat("  tv=", t(tv));cat("  tvb=" ,tvb);print(qnorm(1 - sig/200))
   }
   out <- data.frame("Beta=" =b,"Standard Error" =seb,"T-value"=matrix(tv)) 
-  yout[[vars]] <- out
-  if(vars == 20) names(yout) <- c_names
+  yout[[vars]] <- out   # add data frame to YOUT list
+  if(vars == 20) names(yout) <- c_names # add names to list on final loop
 }
 return(yout)
 }
