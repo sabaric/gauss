@@ -58,7 +58,7 @@ yout <- list()
   }
   out <- data.frame("Beta=" =b,"Standard Error" =seb,"T-value"=matrix(tv)) 
   yout[[vars]] <- out
-  
+  if(vars == 20) names(yout) <- c_names
 }
 return(yout)
 }
