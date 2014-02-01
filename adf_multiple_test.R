@@ -16,6 +16,7 @@ colnames(cpi) = c(c_names, "US") # Using the vector of names as the column names
 l_cpi = as.matrix(log(cpi)) # Log of CPI and converts into matrix
 l_nex = as.matrix(log(1/nex)) # Log of the nominal exchange rate and converts into matrix
 rex = l_nex + l_cpi[ , 1:20] - l_cpi[ , 21] # Computes the real exchange rate
+  # adfall function loops through all series, caculates the adf for each series and then     saves the output from each series in a list named yout
 
 
 adfall <- function(data,pmax,c,sig){
