@@ -54,14 +54,12 @@ adfgts <- function(y, pmax , c , sig ) {
      j <- j-1
    #cat("lag=" ,j+1);  cat("  tv=", t(tv));cat("  tvb=" ,tvb);print(qnorm(1 - sig/200))
       }
-  out <- list("Beta=" =b,"Standard Error" =seb,"T-value"=matrix(tv),"
-              lag = " =j+1 )
+  out <- list("Beta=" =b,"Standard Error" =seb,"T-value"=matrix(tv),"prob" = pnorm(abs(tv),lower.tail = FALSE),"lag " =j+1 )
   return(out)
 }
 
 ad1 <- adfgts(y1, pmax = 10, c=1, sig = 10)
-pout<-format(ad1, digits=3, scientific = FALSE)
-as.data.frame(pout)
+format(data.frame(ad1[1:4]),digits=3, scientific = FALSE)
 
 
 
@@ -82,13 +80,10 @@ adfabic <- function(y, pmax , c , crt ) {
       x <- cbind( matrix(1,nrow = (n2-j)),matrix(1:(n2-j),nrow = (n2-j)),as.matrix(y_1[(j+1):n2]))
     } else  
       x <- as.matrix(y_1[(j+1):n2])
+    # replace for loop wuth "embed()" function
     
-    i <- 1
+    x <- cbind(x ,embed(dy,j)[1:nrow(x), ])
     
-    while(i <= j) {
-      x <- cbind(x ,dy[( (j + 1) - i ):(n2-i)])
-      i <- i +1
-    }
     b   <- solve(t(x)%*%x)%*%(t(x)%*%dy[(j+1):n2])
     rsd <- dy[(j+1):n2] - x%*%b
     non <- nrow(x)
@@ -107,6 +102,6 @@ adfabic <- function(y, pmax , c , crt ) {
   out <- list("lag" = lag, "adf" = adf, "rho" = rho, "std" = std)
 return(out)
 }
-adfabic(y1,10,1, 2)
-adfgts(y1, pmax = 2, c=2, sig = 10)
+ad2 <- adfabic(y1,10,1, 2)
+
 
