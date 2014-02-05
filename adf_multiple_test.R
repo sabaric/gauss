@@ -40,12 +40,7 @@ yout <- list()
         } else  
         x <- as.matrix(y_1[(j+1):n2])
     
-    i <- 1
-    
-        while(i <= j) {
-            x <- cbind(x ,dy[( (j + 1) - i ):(n2-i)])
-            i <- i +1
-                      }
+        x <- cbind(x ,embed(dy,j)[1:nrow(x), ])
     b   <- solve(t(x)%*%x)%*%(t(x)%*%dy[(j+1):n2])
     rsd <- dy[(j+1):n2] - x%*%b
     ssq <- as.numeric(t(rsd)%*%rsd / (nrow(x) - ncol(x)))

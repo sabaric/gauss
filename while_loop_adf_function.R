@@ -17,10 +17,10 @@ colnames(cpi) = c(c_names, "US") # Using the vector of names as the column names
 l_cpi = as.matrix(log(cpi)) # Log of CPI and converts into matrix
 l_nex = as.matrix(log(1/nex)) # Log of the nominal exchange rate and converts into matrix
 rex = l_nex + l_cpi[ , 1:20] - l_cpi[ , 21] # Computes the real exchange rate
-y1 <- matrix(rex[1:40 ,2], nrow = 40, ncol =1)
+y1 <- matrix(rex[  ,2], nrow = nrow(rex), ncol =1)
 
 data(USeconomic, package = "tseries")
-y2<-matrix(USeconomic[ ,1],nrow =136, ncol =1)
+y2<-matrix(USeconomic[ ,1],nrow =nrow(USeconomic), ncol =1)
 
 
 # Hyeongwoo's ADFGTS program
@@ -28,6 +28,8 @@ adfgts <- function(y, pmax , c , sig ) {
   n1  <- nrow(y)
   y_1 <- matrix(y[1:n1-1])
   dy  <- matrix((y[2:n1] - y_1),nrow(y_1),1)
+
+  
   n2  <- nrow(dy)  
   tvb <- 0
   j <- pmax
@@ -41,12 +43,14 @@ adfgts <- function(y, pmax , c , sig ) {
     } else  
       x <- as.matrix(y_1[(j+1):n2])
     
-   i <- 1
-  
-        while(i <= j) {
-           x <- cbind(x ,dy[( (j + 1) - i ):(n2-i)])
-          i <- i +1
-        }
+    x <- cbind(x ,embed(dy,j)[1:nrow(x), ])
+    
+#     i <- 1
+#     
+#     while(i <= j) {
+#       x <- cbind(x ,dy[( (j + 1) - i ):(n2-i)])
+#       i <- i +1
+# }
     b   <- solve(t(x)%*%x)%*%(t(x)%*%dy[(j+1):n2])
     rsd <- dy[(j+1):n2] - x%*%b
     ssq <- as.numeric(t(rsd)%*%rsd / (nrow(x) - ncol(x)))
@@ -86,6 +90,7 @@ adfabic <- function(y, pmax , c , crt ) {
     } else  
       x <- as.matrix(y_1[(j+1):n2])
     
+   # x <- cbind(x ,embed(dy,j)[1:nrow(x), ]) 
     i <- 1
     
     while(i <= j) {
@@ -110,6 +115,6 @@ adfabic <- function(y, pmax , c , crt ) {
   out <- list("lag" = lag, "adf" = adf, "rho" = rho, "std" = std)
 return(out)
 }
-adfabic(y1,10,1, 2)
+adfabic(y1,5,1, 2)
 adfgts(y1, pmax = 2, c=2, sig = 10)
 
